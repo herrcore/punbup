@@ -44,6 +44,8 @@ optional arguments:
   -o, --original  Rename all quarantine files to their original names as noted
                   in the Details file. Some assumptions have been made for
                   this to feature to work. Use at your own risk.
+  -c {md5,sha1,sha256}, --hash {md5,sha1,sha256}
+                  Calculates the hash for all of the files in the bup.
 ```                  
 ##Features
 ###Fully Implemented

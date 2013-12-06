@@ -4,6 +4,7 @@ import os
 import errno
 import argparse
 import re
+import hashlib
     
 try:
     import OleFileIO_PL
@@ -120,6 +121,35 @@ def parseDetails(data):
         if not keyfound:
             tmp[line.split('=', 1)[0]] = line.split('=', 1)[1]
     return details
+    
+def getHashes(bupname,htype):
+    #
+    #Return a dictionary of stream name and hash. 
+    #
+    try:
+        if OleFileIO_PL.isOleFile(bupname) is not True:
+            print >>sys.stderr, 'Error - %s is not a valid OLE file.' % bupname
+            sys.exit(1)
+
+        ole = OleFileIO_PL.OleFileIO(bupname)                
+        hashes = {}
+        for entry in ole.listdir():
+            if entry[0] != "Details":
+                fdata = ole.openstream(entry[0]).read()
+                ptext = decryptStream(fdata)
+                if htype == 'md5':
+                    m = hashlib.md5() 
+                elif htype == 'sha1':
+                    m = hashlib.sha1() 
+                elif htype == 'sha256':
+                    m = hashlib.sha256() 
+                m.update(ptext)
+                hashes[entry[0]] = m.hexdigest()                    
+        ole.close()        
+        return hashes
+    except Exception as e:
+        print >>sys.stderr, 'Error - %s' % e
+        sys.exit(1)
         
 
 def main():
@@ -127,6 +157,7 @@ def main():
     parser.add_argument("infile", help="The file that you wish to un-bup.")
     parser.add_argument('-d','--details',dest="print_details",action='store_true',default=False,help="Only print the contents of the Details file. Don't extract any files.")
     parser.add_argument('-o','--original',dest="rename_original",action='store_true',default=False,help="Rename all quarantine files to their original names as noted in the Details file. Some assumptions have been made for this to feature to work. Use at your own risk.")
+    parser.add_argument('-c','--hash',dest="hash",choices=('md5','sha1','sha256'),help="Calculates the hash for all of the files in the bup. ")
     args = parser.parse_args()
     
     bupname = args.infile
@@ -137,6 +168,10 @@ def main():
         sys.exit(1)
     if args.print_details:
         print getDetails(bupname)
+    elif args.hash:
+        hashes = getHashes(bupname,args.hash)
+        for name in hashes:            
+            print "%s hash for %s: %s" % (args.hash,name,hashes[name])
     elif args.rename_original:
         extractAll(bupname,original=True)
     else:
