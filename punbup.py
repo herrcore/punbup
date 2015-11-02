@@ -23,6 +23,8 @@ def extract(infile, dirname=None):
         ole = OleFileIO_PL.OleFileIO(infile)
         filelist = ole.listdir()
         for fname in filelist:
+            if not ole.get_size(fname[0]):
+                print 'Warning: The "%s" stream reports a size of 0. Possibly a corrupt bup.' % fname[0]
             data = ole.openstream(fname[0]).read()
             fp = open(os.path.join(dirname, fname[0]),'wb')
             fp.write(data)
