@@ -5,6 +5,8 @@ import errno
 import argparse
 import re
 import hashlib
+
+# will adapt this for python3
     
 try:
     import OleFileIO_PL
