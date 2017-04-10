@@ -5,13 +5,12 @@ import errno
 import argparse
 import re
 import hashlib
-
-# will adapt this for python3
+import collections
     
 try:
     import OleFileIO_PL
 except Exception as e:
-    print >>sys.stderr, 'Error - Please ensure you install the OleFileIO_PL library before running this script (https://bitbucket.org/decalage/olefileio_pl): %s' % e
+    print('Error - Please ensure you install the OleFileIO_PL library before running this script (https://bitbucket.org/decalage/olefileio_pl): %s' % e, file=sys.stderr)
     sys.exit(1)
 
 def extract(infile, dirname=None):
@@ -19,14 +18,14 @@ def extract(infile, dirname=None):
         dirname = os.getcwd()
     try:
         if OleFileIO_PL.isOleFile(infile) is not True:
-            print >>sys.stderr, 'Error - %s is not a valid OLE file.' % infile
+            print('Error - %s is not a valid OLE file.' % infile, file=sys.stderr)
             sys.exit(1)
         
         ole = OleFileIO_PL.OleFileIO(infile)
         filelist = ole.listdir()
         for fname in filelist:
             if not ole.get_size(fname[0]):
-                print 'Warning: The "%s" stream reports a size of 0. Possibly a corrupt bup.' % fname[0]
+                print('Warning: The "%s" stream reports a size of 0. Possibly a corrupt bup.' % fname[0])
             data = ole.openstream(fname[0]).read()
             fp = open(os.path.join(dirname, fname[0]),'wb')
             fp.write(data)
@@ -34,13 +33,13 @@ def extract(infile, dirname=None):
         ole.close()
         return filelist
     except Exception as e:
-        print >>sys.stderr, 'Error - %s' % e
+        print('Error - %s' % e, file=sys.stderr)
         sys.exit(1)
 
 def decryptStream(data):
     ptext=''
     for b in data:
-        ptext+= chr(ord(b) ^ ord('\x6A'))
+        ptext+= chr(b ^ ord('\x6A'))
     return ptext
 
 def decryptFile(fname):
@@ -51,7 +50,7 @@ def decryptFile(fname):
         fp.write(ptext)
         fp.close()
     except Exception as e:
-        print>>sys.stderr, "Error - %s" % e
+        print("Error - %s" % e, file=sys.stderr)
         sys.exit(1)
 
 def extractAll(bupname, original=False):
@@ -79,16 +78,16 @@ def extractAll(bupname, original=False):
                 if newName:
                     os.rename(os.path.join(dirname, fname[0]), os.path.join(dirname, newName))
                 else:
-                    print>>sys.stderr, "Error - Could not rename %s: original name not found in Details file." % fname
+                    print("Error - Could not rename %s: original name not found in Details file." % fname, file=sys.stderr)
             except Exception as e:
-                print>>sys.stderr, "Error - Could not rename %s: %s" % (fname, e)
+                print("Error - Could not rename %s: %s" % (fname, e), file=sys.stderr)
             
-    print>>sys.stdout, "Successfully extracted all files to %s." % dirname
+    print("Successfully extracted all files to %s." % dirname, file=sys.stdout)
 
 def getDetails(bupname):
     try:
         if OleFileIO_PL.isOleFile(bupname) is not True:
-            print >>sys.stderr, 'Error - %s is not a valid OLE file.' % bupname
+            print('Error - %s is not a valid OLE file.' % bupname, file=sys.stderr)
             sys.exit(1)
 
         ole = OleFileIO_PL.OleFileIO(bupname)
@@ -98,7 +97,7 @@ def getDetails(bupname):
         ole.close()
         return ptext
     except Exception as e:
-        print >>sys.stderr, 'Error - %s' % e
+        print('Error - %s' % e, file=sys.stderr)
         sys.exit(1)
 
 def parseDetails(data):
@@ -132,7 +131,7 @@ def getHashes(bupname,htype):
     #
     try:
         if OleFileIO_PL.isOleFile(bupname) is not True:
-            print >>sys.stderr, 'Error - %s is not a valid OLE file.' % bupname
+            print('Error - %s is not a valid OLE file.' % bupname, file=sys.stderr)
             sys.exit(1)
 
         ole = OleFileIO_PL.OleFileIO(bupname)                
@@ -147,19 +146,19 @@ def getHashes(bupname,htype):
                     m = hashlib.sha1() 
                 elif htype == 'sha256':
                     m = hashlib.sha256() 
-                m.update(ptext)
+                m.update(ptext.encode("utf-8"))
                 hashes[entry[0]] = m.hexdigest()                    
         ole.close()        
         return hashes
     except Exception as e:
-        print >>sys.stderr, 'Error - %s' % e
+        print('Error - %s' % e, file=sys.stderr)
         sys.exit(1)
         
 dumplinelength = 16
 
 # CIC: Call If Callable
 def CIC(expression):
-    if callable(expression):
+    if isinstance(expression, collections.Callable):
         return expression()
     else:
         return expression
@@ -232,7 +231,7 @@ def printDump(bupname, DumpFunction=IdentityFunction, allfiles=False):
         msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
     try:
         if OleFileIO_PL.isOleFile(bupname) is not True:
-            print >>sys.stderr, 'Error - %s is not a valid OLE file.' % bupname
+            print('Error - %s is not a valid OLE file.' % bupname, file=sys.stderr)
             sys.exit(1)
 
         ole = OleFileIO_PL.OleFileIO(bupname)
@@ -240,14 +239,14 @@ def printDump(bupname, DumpFunction=IdentityFunction, allfiles=False):
         for entry in ole.listdir():
             if entry[0] != "Details":
                 if printNewline:
-                    print
+                    print()
                 printNewline = True
                 StdoutWriteChunked(DumpFunction(decryptStream(ole.openstream(entry[0]).read())))
                 if not allfiles:
                     break
         ole.close()
     except Exception as e:
-        print >>sys.stderr, 'Error - %s' % e
+        print('Error - %s' % e, file=sys.stderr)
         sys.exit(1)
 
 def main():
@@ -266,15 +265,15 @@ def main():
     bupname = args.infile
     #sanity check make sure .bup exists
     if not os.path.exists(bupname):
-        print>>sys.stderr, "Error - the .bup file %s does not exist.\n" % bupname
+        print("Error - the .bup file %s does not exist.\n" % bupname, file=sys.stderr)
         parser.print_help()
         sys.exit(1)
     if args.print_details:
-        print getDetails(bupname)
+        print(getDetails(bupname))
     elif args.hash:
         hashes = getHashes(bupname,args.hash)
         for name in hashes:
-            print "%s hash for %s: %s" % (args.hash,name,hashes[name])
+            print("%s hash for %s: %s" % (args.hash,name,hashes[name]))
     elif args.rename_original:
         extractAll(bupname,original=True)
     elif args.print_firstfile:
