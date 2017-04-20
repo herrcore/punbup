@@ -39,7 +39,8 @@ def extract(infile, dirname=None):
 def decryptStream(data):
     ptext=''
     for b in data:
-        ptext+= chr(b ^ ord('\x6A'))
+        if b >= 0 and b <= 127:
+            ptext+= chr(b ^ ord('\x6A'))
     return ptext
 
 def decryptFile(fname):
