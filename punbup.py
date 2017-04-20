@@ -217,10 +217,13 @@ def IdentityFunction(data):
 
 #Fix for http://bugs.python.org/issue11395
 def StdoutWriteChunked(data):
-    while data != '':
+    while data != '' and data != None:
         sys.stdout.write(data[0:10000])
         sys.stdout.flush()
         data = data[10000:]
+
+def RawAsciiDump(data):
+    print(data)
 
 def printDump(bupname, DumpFunction=IdentityFunction, allfiles=False):
     #
@@ -260,6 +263,7 @@ def main():
     parser.add_argument('-X','--hexdumpall',dest="print_hexdumpall",action='store_true',default=False,help="Perform a hexdump of all quarantined files.")
     parser.add_argument('-a','--hexasciidumpfirst',dest="print_hexasciidumpfirst",action='store_true',default=False,help="Perform a hex & ASCII dump of the first quarantined file.")
     parser.add_argument('-A','--hexasciidumpall',dest="print_hexasciidumpall",action='store_true',default=False,help="Perform a hex & ASCII dump of all quarantined files.")
+    parser.add_argument('-R','--rawasciidumpall',dest="print_rawasciidumpall",action='store_true',default=False,help="Raw ASCII dump of all quarantined files.")
     args = parser.parse_args()
 
     bupname = args.infile
@@ -286,6 +290,8 @@ def main():
         printDump(bupname, HexAsciiDump)
     elif args.print_hexasciidumpall:
         printDump(bupname, HexAsciiDump, True)
+    elif args.print_rawasciidumpall:
+        printDump(bupname, RawAsciiDump, True)
     else:
         extractAll(bupname)
 
