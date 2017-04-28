@@ -48,7 +48,7 @@ def decryptFile(fname):
         bfile = open(fname, "rb").read()
         ptext=decryptStream(bfile)
         fp  = open(fname, "wb")
-        fp.write(ptext)
+        fp.write(ptext.encode("utf-8"))
         fp.close()
     except Exception as e:
         print("Error - %s" % e, file=sys.stderr)
