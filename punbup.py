@@ -7,20 +7,20 @@ import re
 import hashlib
     
 try:
-    import OleFileIO_PL
+    import olefile
 except Exception as e:
-    print >>sys.stderr, 'Error - Please ensure you install the OleFileIO_PL library before running this script (https://bitbucket.org/decalage/olefileio_pl): %s' % e
+    print >>sys.stderr, 'Error - Please ensure you install the olefile library before running this script (https://github.com/decalage2/olefile): %s' % e
     sys.exit(1)
 
 def extract(infile, dirname=None):
     if dirname is None:
         dirname = os.getcwd()
     try:
-        if OleFileIO_PL.isOleFile(infile) is not True:
+        if olefile.isOleFile(infile) is not True:
             print >>sys.stderr, 'Error - %s is not a valid OLE file.' % infile
             sys.exit(1)
         
-        ole = OleFileIO_PL.OleFileIO(infile)
+        ole = olefile.OleFileIO(infile)
         filelist = ole.listdir()
         for fname in filelist:
             if not ole.get_size(fname[0]):
@@ -85,11 +85,11 @@ def extractAll(bupname, original=False):
 
 def getDetails(bupname):
     try:
-        if OleFileIO_PL.isOleFile(bupname) is not True:
+        if olefile.isOleFile(bupname) is not True:
             print >>sys.stderr, 'Error - %s is not a valid OLE file.' % bupname
             sys.exit(1)
 
-        ole = OleFileIO_PL.OleFileIO(bupname)
+        ole = olefile.OleFileIO(bupname)
         #clean this up later by catching exception
         data = ole.openstream("Details").read()
         ptext=decryptStream(data)
@@ -129,11 +129,11 @@ def getHashes(bupname,htype):
     #Return a dictionary of stream name and hash. 
     #
     try:
-        if OleFileIO_PL.isOleFile(bupname) is not True:
+        if olefile.isOleFile(bupname) is not True:
             print >>sys.stderr, 'Error - %s is not a valid OLE file.' % bupname
             sys.exit(1)
 
-        ole = OleFileIO_PL.OleFileIO(bupname)                
+        ole = olefile.OleFileIO(bupname)                
         hashes = {}
         for entry in ole.listdir():
             if entry[0] != "Details":
@@ -229,11 +229,11 @@ def printDump(bupname, DumpFunction=IdentityFunction, allfiles=False):
         import msvcrt
         msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
     try:
-        if OleFileIO_PL.isOleFile(bupname) is not True:
+        if olefile.isOleFile(bupname) is not True:
             print >>sys.stderr, 'Error - %s is not a valid OLE file.' % bupname
             sys.exit(1)
 
-        ole = OleFileIO_PL.OleFileIO(bupname)
+        ole = olefile.OleFileIO(bupname)
         printNewline = False
         for entry in ole.listdir():
             if entry[0] != "Details":
